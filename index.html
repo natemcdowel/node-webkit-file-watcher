@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>My AngularJS App</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">
+  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"></script>
+</head>
+<body>
+  <input type="file" id="filePicker" style="display: none" />
+  <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
+  <ul class="menu">
+    <li><a href="#/fileBrowser">File Browser</a></li>
+    <li><a href="#/userOptions">Options</a></li>
+  </ul>
+
+  <div ng-view></div>
+
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-route/angular-route.js"></script>
+  <script src="app.js"></script>
+  <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+  <script src="fileBrowser/file.browser.controller.js"></script>
+  <script src="userOptions/user.options.controller.js"></script>
+  <script src="services/file.service.js"></script>
+  <script src="services/ftp.service.js"></script>
+  <script src="services/google.drive.service.js"></script>
+  <script src="components/version/version.js"></script>
+  <script src="components/version/version-directive.js"></script>
+  <script src="components/version/interpolate-filter.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script>
+  var liveReload = function() {
+    var path = './';
+    var fs = require('fs');
+    fs.watch(path, function() {
+      if (location)
+        location.reload();
+    });
+  };
+  liveReload();
+  </script>
+</body>
+</html>

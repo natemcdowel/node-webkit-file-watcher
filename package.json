@@ -1,0 +1,21 @@
+{
+  "name": "nw-demo",
+  "version": "0.0.1",
+  "main": "loader.html",
+  "node-remote": "localhost",
+  "window": {
+  	"fullscreen":false,
+  	"width": 1280,
+  	"height": 768,
+  	"min_width": 960,
+    "min_height": 500,
+  	"frame": true,
+  	"toolbar":true
+  },
+  "dependencies": {
+    "bower": "1.4.1",
+  	"watch":"0.16.0",
+    "ftp-client":"0.2.1",
+    "express":""
+  }
+}
