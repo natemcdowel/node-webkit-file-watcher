@@ -1,19 +1,11 @@
-/**
- * Called when the client library is loaded to start the auth flow.
- */
-// var handleClientLoad = function() {
-//   window.setTimeout(ns.checkAuth, 1);
-//   window.driveLoaded = true;
-//   return true;
-// };
-
-
 angular.module('myApp.service.google.drive', []).service('googleDriveService', function($q, $rootScope, $timeout, $http) {
 
   var CLIENT_ID = '493441098996-s614b95pb80clg6i1o4af5gfho7co08n.apps.googleusercontent.com',
+      fs = require('fs'),
       SCOPES = 'https://www.googleapis.com/auth/drive',
       ns = {
-        files:false
+        files:[],
+        folders:[]
       };
 
   /**
@@ -42,7 +34,10 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       filePicker.style.display = 'block';
       filePicker.onchange = ns.uploadFile;
       ns.getFiles().then(function(data){
-        ns.files = data;
+        ns.aggregateFolders(data);
+        ns.assignFileDirectories(data);
+        console.log(ns.files);
+        console.log(ns.folders);
         $rootScope.$broadcast('fileListingComplete', ns.files);
       });
     } else {
@@ -68,19 +63,72 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     return defer.promise;
   };
 
+  ns.assignFileDirectories = function(files) {
+    angular.forEach(files.items, function(file){
+      file.directory = [];
+
+      if (file.parents && file.parents.length > 0) {
+        angular.forEach(file.parents, function(parent){
+          file.directory.push(ns.findFileDirectory(parent.id, files));
+        });
+      }
+    });
+    ns.files = files;
+  };
+
+  ns.findFileDirectory = function(id, files) {
+    var out = false;
+    angular.forEach(files.items, function(value){
+      if (value.id === id) {
+        out = value;
+      }
+    });
+    return out;
+  };
+
+  ns.aggregateFolders = function(files) {
+    angular.forEach(files.items, function(value){
+      if (value.mimeType === "application/vnd.google-apps.folder") {
+        ns.folders.push(value);
+      }
+    });
+    return ns.folders;
+  };
+
   /**
    * Start the file upload.
    *
    * @param {Object} evt Arguments from the file selector.
    */
-  ns.uploadFile = function(evt) {
-    
+  ns.uploadFile = function(evt, fileStructure) {
+    var folderId = false;
+
     gapi.client.load('drive', 'v2', function() {
-      var file = evt.target.files[0];
-      // var folderId = ns.createFolder('blah');
-      ns.insertFile(file, false, '0Byf6Gzpv3FOsejVkTnZsTXFmdlU');
+      folderId = ns.folderAlreadyCreated(fileStructure.directory);
+      
+      // Create folder in google drive, if it doesn't exist
+      if (!folderId) {
+        ns.createFolder(fileStructure.directory[0]).then(function(folderId){
+          // Upload file to newly created folder
+          ns.insertFile(fileStructure, false, folderId);
+        });
+      }
+      else {
+        ns.insertFile(fileStructure, false, folderId);
+      }
     });
   }
+
+  ns.folderAlreadyCreated = function(directory) {
+    var out = false;
+    angular.forEach(ns.folders, function(folder,key){
+      console.log(folder.title + ' -- ' + directory[0]);
+      if (folder.title === directory[0]) {
+        out = folder.id;
+      }
+    });
+    return out;
+  };
 
   /**
    * Insert new file.
@@ -93,8 +141,49 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     const delimiter = "\r\n--" + boundary + "\r\n";
     const close_delim = "\r\n--" + boundary + "--";
 
+
+    var sendFile = function(data) {
+      var contentType = fileData.type || 'application/octet-stream';
+      var metadata = {
+        'title': fileData.fileName,
+        'mimeType': contentType,
+        'parents': [{"id":folderId}]
+      };
+
+      var base64Data = btoa(data);
+      var multipartRequestBody =
+          delimiter +
+          'Content-Type: application/json\r\n\r\n' +
+          JSON.stringify(metadata) +
+          delimiter +
+          'Content-Type: ' + contentType + '\r\n' +
+          'Content-Transfer-Encoding: base64\r\n' +
+          '\r\n' +
+          base64Data +
+          close_delim;
+
+      var request = gapi.client.request({
+          'path': '/upload/drive/v2/files',
+          'method': 'POST',
+          'params': {'uploadType': 'multipart'},
+          'headers': {
+            'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+          },
+          'body': multipartRequestBody});
+      if (!callback) {
+        callback = function(file) {
+          console.log(file)
+        };
+      }
+      request.execute(callback);
+    };
+
     var reader = new FileReader();
-    reader.readAsBinaryString(fileData);
+    fs.readFile('C:/node-webkit/nwjs-v0.12.2-win-x64/asdf.txt', function(err, data){
+      console.log(data);
+      sendFile(data);
+    });
+
     reader.onload = function(e) {
       var contentType = fileData.type || 'application/octet-stream';
       var metadata = {
@@ -133,6 +222,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
   };
 
   ns.createFolder = function(folderName) {
+    var defer = $q.defer();
     var body = {
       'title': folderName,
       'mimeType': "application/vnd.google-apps.folder"
@@ -144,8 +234,10 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
 
     request.execute(function(resp) {
       console.log('Folder ID: ' + resp.id);
-      return resp.id;
+      defer.resolve(resp.id);
     });
+
+    return defer.promise;
   };
 
   ns.retrieveAllFiles = function() {
@@ -157,7 +249,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
         defer.resolve(resp);
       } else if (resp.error.code == 401) {
         // Access token might have expired.
-        checkAuth();
+        ns.checkAuth();
       } else {
         console.log('An error occured: ' + resp.error.message);
       }

@@ -46,6 +46,5 @@ angular.module('myApp.view1', [])
 
   $scope.$on('fileListingComplete',function(e, payload){
     self.remoteFiles = payload.items;
-    console.log(self.remoteFiles);
   });
 }]);
