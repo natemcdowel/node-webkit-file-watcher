@@ -4,7 +4,7 @@
 		<a ng-if="file.directory" ng-click="vm.goToDirectory(file.name)">{{file.name}}</a>
 		<span ng-if="!file.directory">
 			{{file.name}} 
-			<button class="glyphicon glyphicon-eye-open" ng-click="vm.watchFile(file.name)"></button>
+			<button class="glyphicon glyphicon-eye-open" ng-click="vm.watchFile(file.name)"><span ng-if="vm.checkIfWatched(vm.getFullPath(vm.directories), file.name)">ALREADY WATCHED</span></button>
 		</span>
 	</div>
 	<hr>

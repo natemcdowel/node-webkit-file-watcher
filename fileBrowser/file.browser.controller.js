@@ -44,6 +44,18 @@ angular.module('myApp.view1', [])
     fileService.saveJsonFile('json/user.settings.json', self.userSettings);
   };
 
+  self.checkIfWatched = function(fullPath, localFileName) {
+    var out = false;
+    angular.forEach(self.files, function(driveFile){
+      console.log(fullPath+localFileName);
+      console.log(driveFile);
+      if (fullPath+localFileName === driveFile.title) {
+        out = true;
+      }
+    });
+    return out;
+  };
+
   $scope.$on('fileListingComplete',function(e, payload){
     self.remoteFiles = payload.items;
   });

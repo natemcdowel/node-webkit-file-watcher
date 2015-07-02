@@ -100,6 +100,7 @@ angular.module('myApp.service.fileService', []).service('fileService', function(
     angular.forEach(filesToWatch, function(file){
       fs.watchFile(file, function (curr, prev) {
         console.log(file);
+        googleDriveService.uploadFile(false, file);
       });
     });
     // angular.forEach(filesToWatch, function(file){

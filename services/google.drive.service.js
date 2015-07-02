@@ -128,7 +128,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
    * Start the file upload.
    * @param {Object} evt Arguments from the file selector.
    */
-  ns.uploadFile = function(evt, fileStructure, directory, key) {
+  ns.uploadFile = function(evt, file) {
     var folder = false,
         parentFolder = false,
         defer = $q.defer();
@@ -136,36 +136,8 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     gapi.client.load('drive', 'v2', function() {
       ns.retrieveAllFiles().then(function(data){
         ns.reloadFilesAndDirectories(data);
-        folder = ns.folderAlreadyCreated(directory);
-
-        // Create folder in google drive, if it doesn't exist
-        if (!folder && key === 0) {
-          ns.createFolder(directory).then(function(newFolderId){
-            ns.fileDirectoryIds.push(newFolderId);
-            // Only upload if last direcory has been created
-            if (key === fileStructure.directory.length) {
-              ns.insertFile(fileStructure, false, newFolderId);
-            }
-            defer.resolve();
-          });
-        }
-        // If folder has not been created, and not the first directory
-        else if (!folder && key > 0) {
-          var parentFolder = ns.fileDirectoryIds[key-2];
-          ns.createFolder(directory, parentFolder).then(function(newFolderId){
-            ns.fileDirectoryIds.push(newFolderId);
-            // Only upload if last direcory has been created
-            if (key === fileStructure.directory.length) {
-              ns.insertFile(fileStructure, false, newFolderId);
-            }
-            defer.resolve();
-          });
-        }
-        // If folder has already been created, upload file
-        else {
-          ns.insertFile(fileStructure, false, folder.id);
-          defer.resolve();
-        }
+        ns.insertFile(file, false, ns.folders[0].id);
+        defer.resolve();
       });
     });
     return defer.promise;
@@ -184,8 +156,6 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     if (parentFolderId) {
       body.parents = [{"id":parentFolderId}];
     } 
-    console.log(folderName + '-- ');
-    console.log(body);
     var request = gapi.client.drive.files.insert({
       'resource': body
     });
@@ -195,6 +165,19 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     });
 
     return defer.promise;
+  };
+
+  ns.splitDirectoryFromFile = function(filePath) {
+    filePath = filePath.split('/');
+    fileName = filePath[filePath.length-1];
+    filePath.pop();
+
+    fullDirectoryPath = '';
+    angular.forEach(filePath, function(dir){
+      fullDirectoryPath += dir+'/';
+    });
+
+    return fullDirectoryPath;
   };
 
   /**
@@ -212,7 +195,8 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     var sendFile = function(data) {
       var contentType = fileData.type || 'application/octet-stream';
       var metadata = {
-        'title': fileData.fileName,
+        'title': fileData,
+        'directory': ns.splitDirectoryFromFile(fileData),
         'mimeType': contentType,
         'parents': [{"id":folderId}]
       };
@@ -243,46 +227,6 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       }
       request.execute(callback);
     };
-
-    var reader = new FileReader();
-    fs.readFile('C:/node-webkit/nwjs-v0.12.2-win-x64/asdf.txt', function(err, data){
-      sendFile(data);
-    });
-
-    reader.onload = function(e) {
-      var contentType = fileData.type || 'application/octet-stream';
-      var metadata = {
-        'title': fileData.name,
-        'mimeType': contentType,
-        'parents': [{"id":folderId}]
-      };
-
-      var base64Data = btoa(reader.result);
-      var multipartRequestBody =
-          delimiter +
-          'Content-Type: application/json\r\n\r\n' +
-          JSON.stringify(metadata) +
-          delimiter +
-          'Content-Type: ' + contentType + '\r\n' +
-          'Content-Transfer-Encoding: base64\r\n' +
-          '\r\n' +
-          base64Data +
-          close_delim;
-
-      var request = gapi.client.request({
-          'path': '/upload/drive/v2/files',
-          'method': 'POST',
-          'params': {'uploadType': 'multipart'},
-          'headers': {
-            'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-          },
-          'body': multipartRequestBody});
-      if (!callback) {
-        callback = function(file) {
-        };
-      }
-      request.execute(callback);
-    }
   };
 
   ns.retrieveAllFiles = function() {
