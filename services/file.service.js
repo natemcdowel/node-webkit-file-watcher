@@ -6,7 +6,7 @@ angular.module('myApp.service.fileService', []).service('fileService', function(
       };
 
   ns.readFiles = function(directory) {
-    var files = [],
+    var outFiles = [],
       defer = $q.defer();
 
     fs.readdir(directory, function (err, files) {
@@ -22,12 +22,12 @@ angular.module('myApp.service.fileService', []).service('fileService', function(
           if (fs.statSync(directory + files[index]).isDirectory()) {
             file.directory = true;
           }
-          files.push(file);
+          outFiles.push(file);  
         }
         catch(e) {
         }
       }
-      defer.resolve(files);
+      defer.resolve(outFiles);
     });
     return defer.promise;
   };

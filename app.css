@@ -32,3 +32,12 @@
 body {
   cursor:pointer;
 }
+
+.watched-file {
+  color:red;
+}
+
+.back-button {
+  font-size: 20px;
+  padding:0px 0px 50px 0px;
+}

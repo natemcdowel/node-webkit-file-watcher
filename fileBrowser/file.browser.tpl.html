@@ -1,14 +1,19 @@
 <div ng-controller="fileBrowserController as vm">
-	<a class="row" ng-if="vm.directories.length > 0" ng-click="vm.backDirectory()">Back</a>
+	<img class="pull-right" ng-if="vm.loading" src="http://www.pocketmovies.net/img/spinner.gif.pagespeed.ce.TFUe6Q5wBV.gif"/>
+	<a class="back-button row" ng-if="vm.directories.length > 0" ng-click="vm.backDirectory()">Back</a><br>
 	<div ng-if="file.name" class="col-md-6" ng-repeat="file in vm.files track by $index">
 		<a ng-if="file.directory" ng-click="vm.goToDirectory(file.name)">{{file.name}}</a>
 		<span ng-if="!file.directory">
 			{{file.name}} 
-			<button class="glyphicon glyphicon-eye-open" ng-click="vm.watchFile(file.name)"><span ng-if="vm.checkIfWatched(vm.getFullPath(vm.directories), file.name)">ALREADY WATCHED</span></button>
+			<button ng-if="!file.watched" class="glyphicon glyphicon-eye-open" ng-click="vm.watchFile(file.name)">
+			</button>
+			<span class="watched-file" ng-if="file.watched">
+				ALREADY WATCHING
+			</span>
 		</span>
 	</div>
 	<hr>
-	<div ng-repeat="file in vm.remoteFiles">
+<!-- 	<div ng-repeat="file in vm.remoteFiles">
 		<div>{{file.title}}</div>
-	</div>
+	</div> -->
 </div>

@@ -37,8 +37,6 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       ns.getFiles().then(function(data){
         ns.aggregateFolders(data);
         ns.assignFileDirectories(data);
-        console.log(ns.files);
-        console.log(ns.folders);
         $rootScope.$broadcast('fileListingComplete', ns.files);
       });
     } else {
@@ -50,7 +48,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
               ns.handleAuthResult);
       };
     }
-  }
+  };
 
   ns.getFiles = function() {
     var defer = $q.defer();
@@ -143,10 +141,6 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     return defer.promise;
   };
 
-  // ns.getParentDirectoryId = function(fileStructure, partialDirectory) {
-  //   if ()
-  // };
-
   ns.createFolder = function(folderName, parentFolderId) {
     var defer = $q.defer();
     var body = {
@@ -223,10 +217,20 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
           'body': multipartRequestBody});
       if (!callback) {
         callback = function(file) {
+          ns.getFiles().then(function(data){
+            ns.aggregateFolders(data);
+            ns.assignFileDirectories(data);
+            $rootScope.$broadcast('fileListingComplete', ns.files);
+          });
         };
       }
       request.execute(callback);
     };
+
+    // var reader = new FileReader();
+    fs.readFile(fileData, function(err, data){
+      sendFile(data);
+    });
   };
 
   ns.retrieveAllFiles = function() {

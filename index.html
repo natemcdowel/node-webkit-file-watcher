@@ -14,8 +14,10 @@
   <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"></script>
 </head>
 <body>
-  <input type="file" id="filePicker" style="display: none" />
-  <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
+  <span ng-hide="!manualUploadShow">
+    <input type="file" id="filePicker" style="display: none" />
+    <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
+  </span>
   <ul class="menu">
     <li><a href="#/fileBrowser">File Browser</a></li>
     <li><a href="#/userOptions">Options</a></li>
