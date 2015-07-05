@@ -20,5 +20,8 @@ config(['$routeProvider', function($routeProvider, $locationProvider) {
     templateUrl: 'userOptions/user.options.tpl.html',
     controller: 'userOptionsController'
   });
-  // $locationProvider.html5Mode(true);
+  $routeProvider.when('/fileWatched', {
+    templateUrl: 'fileBrowser/file.watched.tpl.html',
+    controller: 'fileBrowserController'
+  });
 }]);

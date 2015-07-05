@@ -8,7 +8,11 @@ angular.module('myApp.view1', [])
   self.directories = [];
   self.fullPath = false;
   self.remoteFiles = [];
+  self.initialLoading = true;
   self.remoteFilesNames = [];
+
+  // Call google drive service, to check authorization
+  googleDriveService.checkAuth();
 
   self.getFullPath = function() {
     self.fullPath = self.rootDrive;
@@ -60,6 +64,25 @@ angular.module('myApp.view1', [])
     });
   };
 
+  self.selectDirectory = function(key) {
+    var numberToSplice = 0;
+
+    // If key is passed, directory is one other than root
+    if (key || key === 0) {
+      angular.forEach(self.directories, function(directory, index){
+        if (index > key) {
+          numberToSplice++;
+        }
+      });
+      self.directories.splice(key+1, numberToSplice);
+    }
+    // Clear directories if root drive
+    else {
+      self.directories = [];
+    }
+    self.readFilesInDirectory();
+  };
+
   // Start in base directory
   self.readFilesInDirectory();
 
@@ -68,5 +91,6 @@ angular.module('myApp.view1', [])
     self.createArrayOfRemoteFiles();
     self.readFilesInDirectory();
     self.loading = false;
+    self.initialLoading = false;
   });
 }]);

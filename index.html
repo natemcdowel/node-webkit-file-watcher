@@ -14,17 +14,18 @@
   <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"></script>
 </head>
 <body>
-  <span ng-hide="!manualUploadShow">
+<!--   <span ng-hide="!manualUploadShow">
     <input type="file" id="filePicker" style="display: none" />
     <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
-  </span>
+  </span> -->
   <ul class="menu">
     <li><a href="#/fileBrowser">File Browser</a></li>
-    <li><a href="#/userOptions">Options</a></li>
+    <li><a href="#/fileWatched">Files Watched</a></li>
+    <li><a href="#/userOptions">Settings</a></li>
   </ul>
 
   <div ng-view></div>
-
+  <!-- <iframe id="logoutframe" src="https://accounts.google.com/logout" style="display: none"></iframe> -->
   <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-route/angular-route.js"></script>

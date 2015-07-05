@@ -1,0 +1,16 @@
+<div ng-controller="fileBrowserController as vm">
+
+	<!-- App load spinner -->
+	<div class="center" ng-show="vm.initialLoading">
+		<img src="http://www.pocketmovies.net/img/spinner.gif.pagespeed.ce.TFUe6Q5wBV.gif"/>
+	</div>
+
+	<div ng-hide="vm.initialLoading">
+		<ul class="col-md-6" ng-repeat="file in vm.remoteFiles">
+			<li>
+				<span class="col-md-8">{{file.title}}</span>
+				<button class="col-md-4" ng-click="vm.stopWatching()">Stop watching</button>
+			</li>
+		</ul>
+	</div>
+</div>

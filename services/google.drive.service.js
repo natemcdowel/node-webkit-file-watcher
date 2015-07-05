@@ -26,14 +26,8 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
    * @param {Object} authResult Authorization result.
    */
   ns.handleAuthResult = function(authResult) {
-    var authButton = document.getElementById('authorizeButton');
-    var filePicker = document.getElementById('filePicker');
-    authButton.style.display = 'none';
-    filePicker.style.display = 'none';
     if (authResult && !authResult.error) {
       // Access token has been successfully retrieved, requests can be sent to the API.
-      filePicker.style.display = 'block';
-      filePicker.onchange = ns.uploadFile;
       ns.getFiles().then(function(data){
         ns.aggregateFolders(data);
         ns.assignFileDirectories(data);
@@ -41,12 +35,10 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       });
     } else {
       // No access token could be retrieved, show the button to start the authorization flow.
-      authButton.style.display = 'block';
-      authButton.onclick = function() {
-          gapi.auth.authorize(
-              {'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false},
-              ns.handleAuthResult);
-      };
+      gapi.auth.authorize(
+          {'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false},
+          ns.handleAuthResult
+      );
     }
   };
 
@@ -100,6 +92,17 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     angular.forEach(ns.folders, function(folder,key){
       if (folder.title === directory) {
         out = folder;
+      }
+    });
+    return out;
+  };
+
+  ns.checkIfRemoteFileExists = function(localFileName) {
+    out = false;
+
+    angular.forEach(ns.files.items, function(remoteFile){
+      if (localFileName === remoteFile.title) {
+        out = remoteFile.id;
       }
     });
     return out;
@@ -185,18 +188,48 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
     const delimiter = "\r\n--" + boundary + "\r\n";
     const close_delim = "\r\n--" + boundary + "--";
 
+    var request,
+        metaadata,
+        contentType,
+        base64Data,
+        multipartRequestBody,
+        fileId;
+
+    var postRequest = function() {
+      request = gapi.client.request({
+        'path': '/upload/drive/v2/files',
+        'method': 'POST',
+        'params': {'uploadType': 'multipart'},
+        'headers': {
+          'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+        },
+        'body': multipartRequestBody
+      });
+    }
+
+    var putRequest = function() {
+      request = gapi.client.request({
+        'path': '/upload/drive/v2/files/' + fileId,
+        'method': 'PUT',
+        'params': {'uploadType': 'multipart', 'alt': 'json'},
+        'headers': {
+          'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+        },
+        'body': multipartRequestBody
+      });
+    };
 
     var sendFile = function(data) {
-      var contentType = fileData.type || 'application/octet-stream';
-      var metadata = {
+      contentType = fileData.type || 'application/octet-stream';
+      metadata = {
         'title': fileData,
         'directory': ns.splitDirectoryFromFile(fileData),
         'mimeType': contentType,
         'parents': [{"id":folderId}]
       };
 
-      var base64Data = btoa(data);
-      var multipartRequestBody =
+      base64Data = btoa(unescape(encodeURIComponent(data)));
+      multipartRequestBody =
           delimiter +
           'Content-Type: application/json\r\n\r\n' +
           JSON.stringify(metadata) +
@@ -207,16 +240,20 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
           base64Data +
           close_delim;
 
-      var request = gapi.client.request({
-          'path': '/upload/drive/v2/files',
-          'method': 'POST',
-          'params': {'uploadType': 'multipart'},
-          'headers': {
-            'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
-          },
-          'body': multipartRequestBody});
+      fileId = ns.checkIfRemoteFileExists(fileData);
+
+      // If file has not been created yet, POST
+      if (!fileId) {
+        postRequest();
+      }
+      // Otherwise, PUT and update file
+      else {
+        putRequest();
+      }
+
       if (!callback) {
         callback = function(file) {
+          console.log(file);
           ns.getFiles().then(function(data){
             ns.aggregateFolders(data);
             ns.assignFileDirectories(data);
@@ -247,11 +284,8 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
         console.log('An error occured: ' + resp.error.message);
       }
     });
-
     return defer.promise;
   };
-
-  ns.checkAuth();
 
   return ns;
 });
