@@ -50,3 +50,17 @@ body {
   list-style:none;
   display:inline;
 }
+
+.glyphicon-saved {
+  font-size:20px;
+  color:green;
+}
+
+.glyphicon-cloud-upload {
+  font-size:20px;
+  color:blue;
+}
+
+.file-container {
+  height:50px;
+}

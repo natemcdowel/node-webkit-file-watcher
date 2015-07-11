@@ -5,6 +5,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       SCOPES = 'https://www.googleapis.com/auth/drive',
       ns = {
         files:[],
+        user:false,
         folders:[],
         fileDirectoryIds:[]
       };
@@ -17,7 +18,7 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       gapi.auth.authorize(
         {'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true},
         ns.handleAuthResult);
-    }, 2000);
+    }, 500);
   };
 
   /**
@@ -27,6 +28,10 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
    */
   ns.handleAuthResult = function(authResult) {
     if (authResult && !authResult.error) {
+      ns.getUserProfile().then(function(user){
+        ns.user = user;
+        $rootScope.$broadcast('userDetailsComplete', user);
+      });
       // Access token has been successfully retrieved, requests can be sent to the API.
       ns.getFiles().then(function(data){
         ns.aggregateFolders(data);
@@ -65,6 +70,18 @@ angular.module('myApp.service.google.drive', []).service('googleDriveService', f
       }
     });
     ns.files = files;
+  };
+
+  ns.getUserProfile = function() {
+    var defer = $q.defer();
+    gapi.client.load('drive', 'v2', function() {
+      var request = gapi.client.drive.about.get();
+      request.execute(function(resp) {
+        defer.resolve(resp);
+      });
+    });
+
+    return defer.promise;
   };
 
   ns.findFileDirectory = function(id, files) {

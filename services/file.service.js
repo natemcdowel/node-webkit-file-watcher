@@ -78,9 +78,14 @@ angular.module('myApp.service.fileService', []).service('fileService', function(
     });
   };
 
-  $rootScope.$on('fileListingComplete', function(e, payload) {
-    $rootScope.$$listeners['fileListingComplete'] = [];
+  var fileListingComplete = $rootScope.$on('fileListingComplete', function(e, payload) {
+    console.log(payload);
     ns.fileWatcher();
+    $rootScope.$$listeners['fileListingComplete'] = [];
+  });
+
+  $rootScope.$on('$destroy', function(){
+    fileListingComplete();
   });
 
   return ns;

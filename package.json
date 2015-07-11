@@ -10,7 +10,7 @@
   	"min_width": 960,
     "min_height": 500,
   	"frame": true,
-  	"toolbar":true
+  	"toolbar":false
   },
   "dependencies": {
     "bower": "1.4.1",

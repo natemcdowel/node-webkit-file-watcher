@@ -1,13 +1,13 @@
 <div ng-controller="fileBrowserController as vm">
 	<!-- App load spinner -->
 	<div class="center" ng-show="vm.initialLoading">
-		<img src="http://www.pocketmovies.net/img/spinner.gif.pagespeed.ce.TFUe6Q5wBV.gif"/>
+		<div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active"></div>
 	</div>
 
 	<div ng-hide="vm.initialLoading">
 		<div class="directory-listing"> 
 			<ul>
-				<li>Directory:&nbsp;
+				<li><strong>Directory:&nbsp;</strong>
 					<a ng-click="vm.selectDirectory(false)" ng-if="vm.directories.length">{{vm.rootDrive}}</a>
 					<span ng-if="!vm.directories.length">{{vm.rootDrive}}</span>
 					<span ng-if="vm.directories.length">-></span>
@@ -22,24 +22,27 @@
 		<hr>
 		<!-- Back Button / Spinner -->
 		<div class="center">
-			<img ng-if="vm.loading" src="http://www.pocketmovies.net/img/spinner.gif.pagespeed.ce.TFUe6Q5wBV.gif"/>
+			<span ng-show="vm.loading">
+				<div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active"></div>
+			</span>
 		</div>
 		<a class="back-button row" ng-if="vm.directories.length > 0" ng-click="vm.backDirectory()">Back</a><br>
 
 		<!-- Files -->
-		<div ng-if="file.name" class="col-md-4" ng-repeat="file in vm.files track by $index">
-			<a class="col-md-6" ng-if="file.directory" ng-click="vm.goToDirectory(file.name)">{{file.name}}</a>
+		<div ng-if="file.name" class="col-md-4 file-container" ng-repeat="(key,file) in vm.files track by $index">
+			<a class="col-md-10" ng-if="file.directory" ng-click="vm.goToDirectory(file.name)">{{file.name}}</a>
 			<div ng-if="!file.directory" class="col-md-6">
 				{{file.name}} 
 			</div>
-			<div class="col-md-6">
-				<button ng-if="!file.watched && !file.directory" class="glyphicon glyphicon-eye-open" ng-click="vm.watchFile(file.name)">
-				</button>
-				<span class="watched-file" ng-if="file.watched">
-					ALREADY WATCHING
+			<div class="col-md-2 pull-right">
+ 				<span ng-show="!file.directory && !file.watched">
+					<span ng-click="vm.watchFile(file.name)" class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
+				</span>
+
+				<span ng-show="!file.directory && file.watched">
+					<span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
 				</span>
 			</div>
 		</div>
-		<hr>
 	</div>
 </div>
